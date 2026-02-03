@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import AuthLayout from "../../layouts/AuthLayout";
 import LoginForm from "../../components/auth/LoginForm";
 import { useAuth } from "../../context/AuthContext";
 
@@ -15,10 +14,7 @@ const LoginPage = () => {
   }, [user, loading, navigate]);
 
   return (
-    <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to access your AWS sandbox notes."
-    >
+    <>
       <LoginForm />
       <p className="mt-4 text-center text-xs text-slate-400">
         Don&apos;t have an account?{" "}
@@ -29,7 +25,7 @@ const LoginPage = () => {
           Sign up
         </Link>
       </p>
-    </AuthLayout>
+    </>
   );
 };
 
