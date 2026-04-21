@@ -13,6 +13,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  profile_pic_url?: string;
 }
 
 export interface AuthResponse {

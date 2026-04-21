@@ -1,12 +1,25 @@
-import { useEffect, useState } from "react";
-import LogoutButton from "../../components/auth/LogoutButton";
+import AvatarUpload from "../../components/profile/AvatarUpload";
 import { useAuth } from "../../context/AuthContext";
+import { uploadAvatar } from "../../service/profile.service";
+import { useEffect, useState } from "react";
 import type { Note } from "../../types/notes.type";
 import { createNote, deleteNote, getNotes, updateNote } from "../../service/notes.service";
 
 const NotesPage = () => {
-  const { user } = useAuth();
-
+  const { user, refreshUser } = useAuth();
+  const [uploading, setUploading] = useState(false);
+  // Avatar upload handler (expects file: File)
+  const handleAvatarUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      await uploadAvatar(file);
+      await refreshUser();
+    } catch (err) {
+      alert("Failed to upload avatar");
+    } finally {
+      setUploading(false);
+    }
+  };
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,19 +111,19 @@ const NotesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="flex items-center justify-between border-b border-slate-800 px-6 py-4 bg-slate-950/80 backdrop-blur">
+    <>
+      <div className="mb-8 flex items-center gap-6">
+        <AvatarUpload
+          currentUrl={user && (user as any).profile_pic_url}
+          onUpload={handleAvatarUpload}
+          uploading={uploading}
+        />
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">AWS Sandbox Notes</h1>
-          {user ? (
-            <p className="text-xs text-slate-400">Signed in as {user.name}</p>
-          ) : null}
+          <div className="font-semibold text-slate-100 text-lg">{user?.name}</div>
+          <div className="text-xs text-slate-400">{user?.email}</div>
         </div>
-        <LogoutButton />
-      </header>
-
-      <main className="p-6 max-w-5xl mx-auto">
-        <div className="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)]">
+      </div>
+      <div className="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)]">
           <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 animate-fadeIn">
             <h2 className="text-sm font-semibold tracking-tight text-slate-100 mb-4">
               {editingNoteId ? "Edit note" : "Create a new note"}
@@ -147,7 +160,7 @@ const NotesPage = () => {
                   onChange={(event) => setContent(event.target.value)}
                   placeholder="What is this note about?"
                   rows={6}
-                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y min-h-[140px]"
+                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y min-h-35"
                 />
               </div>
 
@@ -190,7 +203,7 @@ const NotesPage = () => {
                 No notes yet. Create your first note on the left.
               </p>
             ) : (
-              <ul className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+              <ul className="space-y-3 max-h-120 overflow-y-auto pr-1">
                 {notes.map((note) => (
                   <li
                     key={note.id}
@@ -208,7 +221,7 @@ const NotesPage = () => {
                         ) : null}
                       </div>
 
-                      <div className="flex flex-shrink-0 items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex shrink-0 items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           type="button"
                           onClick={() => handleEdit(note)}
@@ -238,9 +251,7 @@ const NotesPage = () => {
             )}
           </section>
         </div>
-      </main>
-    </div>
-  );
-};
+    </>
+)};
 
 export default NotesPage;
