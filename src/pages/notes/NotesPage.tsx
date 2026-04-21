@@ -1,8 +1,25 @@
+import AvatarUpload from "../../components/profile/AvatarUpload";
+import { useAuth } from "../../context/AuthContext";
+import { uploadAvatar } from "../../service/profile.service";
 import { useEffect, useState } from "react";
 import type { Note } from "../../types/notes.type";
 import { createNote, deleteNote, getNotes, updateNote } from "../../service/notes.service";
 
 const NotesPage = () => {
+  const { user, refreshUser } = useAuth();
+  const [uploading, setUploading] = useState(false);
+  // Avatar upload handler (expects file: File)
+  const handleAvatarUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      await uploadAvatar(file);
+      await refreshUser();
+    } catch (err) {
+      alert("Failed to upload avatar");
+    } finally {
+      setUploading(false);
+    }
+  };
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +111,19 @@ const NotesPage = () => {
   };
 
   return (
-    <div className="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)]">
+    <>
+      <div className="mb-8 flex items-center gap-6">
+        <AvatarUpload
+          currentUrl={user && (user as any).profile_pic_url}
+          onUpload={handleAvatarUpload}
+          uploading={uploading}
+        />
+        <div>
+          <div className="font-semibold text-slate-100 text-lg">{user?.name}</div>
+          <div className="text-xs text-slate-400">{user?.email}</div>
+        </div>
+      </div>
+      <div className="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)]">
           <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 animate-fadeIn">
             <h2 className="text-sm font-semibold tracking-tight text-slate-100 mb-4">
               {editingNoteId ? "Edit note" : "Create a new note"}
@@ -222,7 +251,7 @@ const NotesPage = () => {
             )}
           </section>
         </div>
-  );
-};
+    </>
+)};
 
 export default NotesPage;
